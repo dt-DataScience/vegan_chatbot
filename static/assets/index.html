@@ -1,0 +1,131 @@
+ <!DOCTYPE html>
+ <html>
+   <head>
+     <meta charset="utf-8">
+     <title>Pacman demo</title>
+     <style type="text/css">
+      body {
+        background-color: black;
+        margin: 0px;
+
+      }
+      .row {
+        height: 20px;
+      }
+      .row div {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        margin: 0px;
+      }
+      .brick {
+        background-color: blue;
+      }
+      .coin {
+        background: url('coin.gif');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+      }
+      .empty {
+
+      }
+      #pacman {
+        width: 20px;
+        height: 20px;
+        background: url('pacmanRight.gif');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        position: absolute;
+      }
+      #score {
+        color: white;
+      }
+     </style>
+   </head>
+   <body>
+     <div id="container">
+       <div id="world"></div>
+       <div id="pacman"></div>
+       <div id="score">0</div>
+     </div>
+
+     <script>
+      var world = [
+        [2,2,2,2,2,2,2,2,2,2],
+        [2,1,2,1,1,1,1,1,1,2],
+        [2,1,2,1,1,1,1,1,1,2],
+        [2,1,2,2,2,1,1,1,1,2],
+        [2,1,1,1,2,1,2,1,1,2],
+        [2,1,1,1,2,1,2,1,1,2],
+        [2,1,1,1,2,2,2,1,1,2],
+        [2,1,1,1,1,1,1,1,1,2],
+        [2,2,2,2,2,2,2,2,2,2]
+      ];
+
+      var pacman = {
+        x: 1,
+        y: 1,
+        score: 0
+      }
+      function displayWorld(){
+        var output="";
+        for(var i=0; i<world.length; i++){
+          output+="<div class='row'>";
+          for(var j=0; j<world[i].length; j++){
+            if(world[i][j]==2){
+              output+="<div class='brick'></div>";
+            }
+            else if(world[i][j]==1){
+              output+="<div class='coin'></div>";
+            }
+            else if(world[i][j]==0){
+              output+="<div class='empty'></div>";
+            }
+          }
+          output += "</div>";
+        }
+        document.getElementById("world").innerHTML = output;
+      }
+      displayWorld();
+
+      function displayPacman(){
+        document.getElementById('pacman').style.top = pacman.y*20 + "px";
+        document.getElementById('pacman').style.left = pacman.x*20 + "px";
+      }
+      displayPacman();
+
+      document.onkeydown = function(e){
+        console.log(e.keyCode);
+        //right
+        if(e.keyCode == 39 && world[pacman.y][pacman.x+1] != 2){
+          pacman.x++;
+        }
+        //left
+        else if (e.keyCode == 37 && world[pacman.y][pacman.x-1] != 2){
+          pacman.x--;
+        }
+        //up
+        else if (e.keyCode == 38 && world[pacman.y-1][pacman.x] != 2){
+          pacman.y--;
+        }
+        //down
+        else if (e.keyCode == 40 && world[pacman.y+1][pacman.x] != 2){
+          pacman.y++;
+        }
+        if(world[pacman.y][pacman.x] == 1){
+          pacman.score += 10;
+          world[pacman.y][pacman.x] = 0;
+          document.getElementById('score').innerHTML = pacman.score;
+
+        }
+        displayWorld();
+        displayPacman();
+      }
+
+
+     </script>
+
+   </body>
+ </html>

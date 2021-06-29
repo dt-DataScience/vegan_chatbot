@@ -1,0 +1,29 @@
+<nav class="white" role="navigation">
+  <div class="nav-wrapper container">
+    <a id="logo-container" href="/" class="brand-logo">GAinveGAn</a>
+
+    <ul class="right hide-on-med-and-down">
+
+      {% if session.username %}
+        {% for i in range(session['avocados']) %}
+          <li><img class='avocado-nav' src="{{url_for('static', filename='assets/favicon.ico') }}" alt="Avocado drawing by getdrawings.com"/></li>
+        {% endfor %}
+        <li><a href="/quiz">Quiz</a></li>
+        <li><a href="/chat">Chatbot</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a id="loggedin" href="#">Hi {{session.username}}!</a></li>
+        <li><a id="logout" href="/logout">Logout</a></li>
+      {% else %}
+      <li><a href="/about">About</a></li>
+      <li id="loggingdiv">
+        <a id="loggedout" href="#">Login</a>
+      </li>
+      {% endif %}
+    </ul>
+    <ul id="nav-mobile" class="sidenav">
+      <li><a href="#">Navbar Link</a></li>
+    </ul>
+    <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+  </div>
+</nav>
+

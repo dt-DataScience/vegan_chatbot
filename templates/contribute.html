@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>veGAn - Contribute</title>
+  {% include 'partials/styles.html' %}
+</head>
+<body>
+  {% include 'partials/nav.html' %}
+  <div id="quiz_or_feedback">
+    <div id="index-banner" class="parallax-container">
+      <div class="section no-pad-bot">
+        <div class="container">
+          <br><br>
+          <h2 class="header center purple-text text-lighten-1 blurring border">Make a contribution! Of data!</h2>
+          <br><br>
+        </div>
+      </div>
+      <div class="parallax"><img src="{{ url_for('static', filename='assets/brittney_weng.jpg') }}" alt="Turtle by Brittney Went from unsplash"></div>
+    </div>
+    <div id="pacman"></div>
+
+    <div class="container">
+      <div class="section">
+        <div class="row">
+          {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="center">
+            {% for message in messages %}
+              <li class='purple-text'>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+          <form class="col s12 mtop" action="/contribute" method="POST">
+            <div class="row">
+              <div class="input-field col s6">
+                <input id="category" type="text" placeholder="ethics" name="category">
+                <label for="category">Category</label>
+              </div>
+              <div class="input-field col s6">
+                <input id="source" type="text" placeholder="https://youtu.be/C1vW9iSpLLk">
+                <label for="source">Source</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <textarea name="question" id="answer" class="materialize-textarea" placeholder="What is the 'name the trait' argument?"></textarea>
+                <label for="question">Write your quiz question here</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <textarea name="answer" id="answer" class="materialize-textarea" placeholder="Naming the quality that justifies treating beings without that quality differently."></textarea>
+                <label for="answer">Provide a short answer to your quiz question here</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <textarea name="context" id="context" class="materialize-textarea" placeholder="There is no trait that animals lack such that we would treat a human lacking that trait the way we currently treat animals."></textarea>
+                <label for="answer">Provide context and supporting arguments for your answer here</label>
+              </div>
+            </div>
+            <button class="btn waves-effect waves-light"  type="submit" id="submit_contribution">Submit
+              <i class="material-icons right">send</i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include 'partials/footer.html' %}
+
+  {% include 'partials/scripts.html' %}
+  <script src="{{ url_for('static', filename='js/troll.js') }}"></script>
+
+  </body>
+</html>

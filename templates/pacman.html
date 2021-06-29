@@ -1,0 +1,1118 @@
+<html>
+  <head>
+    <title>Pacman on SVG</title>
+<link rel="stylesheet" media="screen, projection" type="text/css" href="{{ url_for('static', filename='css/pacman.css') }}"/>
+</head>
+<body>
+<div id="pacmanwait">
+<div id='stats'>
+  <div class='textblock'>
+    <p id="whoseTurn">1 UP</p>
+    <p id="score">0</p>
+  </div>
+  <div class="textblock">
+    <p>HIGH SCORE</p>
+    <p id="hiscore" align="right">0</p>
+  </div>
+  <div class="textblock">
+    <p>Sorry for the long wait, maybe enjoy some Pacman</p>
+  </div>
+  <div class="textblock">
+    <img id="one" src="{{ url_for('static', filename='assets/pacmanImages/madpacman.png') }}" />
+    <img id="two" src="{{ url_for('static', filename='assets/pacmanImages/madpacman.png') }}" />
+    <img id="three" src="{{url_for('static', filename='assets/pacmanImages/madpacman.png') }}" />
+  </div>
+  <div class="textblock">
+    <p id="winner">
+    Level up!!
+    </p>
+  </div>
+
+</div>
+
+<svg id="svg" xmlns="http://www.w3.org/2000/svg">
+
+  <image id="pacman" xlink:href="" height="20px" width="20px"></image>
+  <image id="blinky" xlink:href="" height="20px" width="20px"></image>
+  <image id="clyde" xlink:href="" height="20px" width="20px"></image>
+  <image id="inky" xlink:href="" height="20px" width="20px"></image>
+  <image id="pinky" xlink:href="" height="20px" width="20px"></image>
+  <image id="cherry" xlink:href="" x="335" y="420" height="25px" width="25px"></image>
+</svg>
+
+<script>
+  var abort = false;
+  var boundaries = [];
+  var coins = [];
+  var coinsMap = [
+    //1 is regular pellet
+    //2 is power pellet
+    //3 is secret passage
+    //4 is ghost passage only
+    //9 are barriers for both pacman and ghosts
+    [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],
+    [9,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9],
+    [9,1,9,9,1,9,9,9,9,1,9,9,9,9,9,9,9,9,1,9,9,9,9,1,9,9,1,9],
+    [9,2,9,9,1,9,9,9,9,1,9,9,9,9,9,9,9,9,1,9,9,9,9,1,9,9,2,9],
+    [9,1,9,9,1,9,9,9,9,1,9,9,1,1,1,1,9,9,1,9,9,9,9,1,9,9,1,9],
+    [9,1,9,9,1,1,1,1,1,1,9,9,1,9,9,1,9,9,1,1,1,1,1,1,9,9,1,9],
+    [9,1,9,9,9,9,1,9,9,1,9,9,1,9,9,1,9,9,1,9,9,1,9,9,9,9,1,9],
+    [9,1,9,9,9,9,1,9,9,1,9,9,1,9,9,1,9,9,1,9,9,1,9,9,9,9,1,9],
+    [9,1,1,1,1,1,1,9,9,1,1,1,1,9,9,1,1,1,1,9,9,1,1,1,1,1,1,9],
+    [9,9,9,1,9,9,9,9,9,0,9,9,9,9,9,9,9,9,0,9,9,9,9,9,1,9,9,9],
+    [9,9,9,1,9,9,9,9,9,0,9,9,9,9,9,9,9,9,0,9,9,9,9,9,1,9,9,9],
+    [9,9,9,1,1,1,1,9,9,0,0,0,0,0,0,0,0,0,0,9,9,1,1,1,1,9,9,9],
+    [9,9,9,0,9,9,1,9,9,0,9,9,9,4,4,9,9,9,0,9,9,1,9,9,0,9,9,9],
+    [9,9,9,0,9,9,1,9,9,0,9,0,0,0,0,0,0,9,0,9,9,1,9,9,0,9,9,9],
+    [3,0,0,0,9,9,1,0,0,0,9,0,0,0,0,0,0,9,0,0,0,1,9,9,0,9,9,9],
+    [3,0,0,0,9,9,1,0,0,0,9,0,0,0,0,0,0,9,0,0,0,1,9,9,0,0,0,3],
+    [9,9,9,9,9,9,1,9,9,0,9,9,9,9,9,9,9,9,0,9,9,1,9,9,9,9,9,9],
+    [9,9,9,9,9,9,1,9,9,0,0,0,0,0,0,0,0,0,0,9,9,1,9,9,9,9,9,9],
+    [9,9,9,1,1,1,1,9,9,9,9,9,0,9,9,0,9,9,9,9,9,1,1,1,1,9,9,9],
+    [9,9,9,1,9,9,1,9,9,9,9,9,0,9,9,0,9,9,9,9,9,1,9,9,1,9,9,9],
+    [9,9,9,1,9,9,1,1,1,1,0,0,0,9,9,0,0,0,1,1,1,1,9,9,1,9,9,9],
+    [9,9,9,1,9,9,9,9,9,1,9,9,9,9,9,9,9,9,1,9,9,9,9,9,1,9,9,9],
+    [9,9,9,1,9,9,9,9,9,1,9,9,9,9,9,9,9,9,1,9,9,9,9,9,1,9,9,9],
+    [9,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,9],
+    [9,1,9,9,9,9,1,9,9,1,9,9,9,9,9,9,9,9,1,9,9,1,9,9,9,9,1,9],
+    [9,1,9,9,9,9,1,9,9,1,9,9,9,9,9,9,9,9,1,9,9,1,9,9,9,9,1,9],
+    [9,1,9,9,1,1,1,9,9,1,1,1,1,1,1,1,1,1,1,9,9,1,1,1,9,9,1,9],
+    [9,2,9,9,1,9,9,9,9,9,9,9,1,9,9,1,9,9,9,9,9,9,9,1,9,9,2,9],
+    [9,1,9,9,1,9,9,9,9,9,9,9,1,9,9,1,9,9,9,9,9,9,9,1,9,9,1,9],
+    [9,1,1,1,1,1,1,1,1,1,1,1,1,9,9,1,1,1,1,1,1,1,1,1,1,1,1,9],
+    [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]
+  ]
+  var player = document.getElementById('pacman');
+
+  function displayCherry(){
+    var path = "./../../static/assets/pacmanImages/"
+    var fruit = document.getElementById('cherry');
+    pacman.cherry = true;
+    fruit.setAttribute('style', 'display:block');
+    if(pacman.fruitcount<3){
+      fruit.setAttribute("xlink:href", path+"cherry.png");
+    }
+    else if(pacman.fruitcount == 3){
+
+    }
+    if(pacman.score>1500){
+      fruit.setAttribute('xlink:href', path+'strawberry.png');
+    }
+  }
+  function hideCherry(){
+    document.getElementById('cherry').setAttribute("style", "display: none");
+    pacman.cherry = false;
+  }
+
+  var pacman = {
+     x: 13.5,
+     y: 23,
+     score: 0,
+     highscore:0,
+     alive: true,
+     deathcount: 0,
+     fruitcount: 1,
+     cherry: false,
+     level: 1,
+     powerPellets: [false, false, false, false]
+   }
+   function scoreCheck(){
+     document.getElementById('score').innerHTML = pacman.score;
+     if(pacman.score > pacman.highscore){
+       pacman.highscore = pacman.score;
+       document.getElementById('hiscore').innerHTML = pacman.highscore;
+     }
+   }
+  function Ghost(name, x, y){
+
+    this.name = name,
+    this.alive = true,
+    this.x = x,
+    this.y = y,
+    this.dx= null,
+    this.dy = null,
+    this.flee = false,
+    // this.safespace = null,
+    this.destination = {x:14, y:14},
+    this.freedom = false,
+    this.recovery = function(){
+      if(this.alive == false && this.x==this.destination.x && this.y == this.destination.y){
+        this.alive = true;
+        this.freedom = false;
+        this.flee = false;
+        if(this.name == 'clyde' || this.name == 'inky'){
+          this.boxHelp = true;
+          this.boxTop = false;
+        }
+        document.getElementById(this.name).setAttribute("xlink:href", "./../../static/assets/pacmanImages/"+this.name+".gif");
+      }
+    },
+    this.escape = function(){
+      //this code will work as long as startpoint is above the ghost box
+      if(this.boxHelp == false){
+        //if you want to go right and are able to
+        if(this.x < this.startpoint.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1] != 9){
+          this.dy = 0;
+          this.dx = 0.25;
+        }
+        //but if right is blocked
+        else if(this.x < this.startpoint.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1] == 9){
+          this.dx = 0;
+        }
+        //if you want to go left and are able to
+        if(this.x > this.startpoint.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1] != 9){
+          this.dy = 0;
+          this.dx = -0.25;
+        }
+        //but if left is blocked
+        else if(this.x > this.startpoint.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1] == 9){
+          this.dx = 0;
+        }
+        //if you want to go up and are able to
+        if(this.y > this.startpoint.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)] != 9){
+          // this.x = Math.round(this.x);
+          this.dx = 0;
+          this.dy = -0.25;
+        }
+        //but if up is blocked
+        else if(this.y > this.startpoint.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)] == 9){
+          this.dy = 0;
+        }
+        //if you want to go down and are able to
+        if(this.y < this.startpoint.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)] != 9){
+          // this.x = Math.round(this.x);
+          this.dx = 0;
+          this.dy = 0.25;
+        }
+        //but if down is blocked
+        else if(this.y < this.startpoint.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)] == 9){
+          this.dy=0;
+        }
+        this.x += this.dx;
+        this.y += this.dy;
+        displayGhosts(ghosts);
+        if(this.y == this.startpoint.y && this.x == this.startpoint.x){
+          this.freedom = true;
+        }
+      }
+      else {
+        if(this.boxTop == false){
+          if(this.x < 13){
+            this.dy = 0;
+            this.dx = 0.25;
+          }
+          else if (this.x > 13){
+            this.dx = -0.25;
+            this.dy = 0;
+          }
+          else if (this.x == 13 && this.y > 11){
+            this.dx = 0;
+            this.dy = -0.25;
+          }
+          else if (this.x == 13 && this.y == 11){
+            this.dy = 0;
+            this.boxTop = true;
+          }
+        }
+        if(this.boxTop == true){
+          if(this.name == "clyde"){
+            this.dx = 0.25;
+          }
+          if(this.name =="inky"){
+            this.dx = -0.25;
+          }
+          if(this.x == this.startpoint.x){
+            this.dx = 0;
+            this.dy = 0.25;
+            this.boxTop = false;
+            this.boxHelp = false;
+          }
+
+        }
+        this.x += this.dx;
+        this.y += this.dy;
+        displayGhosts(ghosts);
+
+      }
+    },
+    this.hunt = function(){
+      if(this.dx == 0 && this.dy == 0){
+        this.dx = 0.25;
+      }
+      if(this.x < 1){
+        this.x = 1;
+        this.dx = 0.25;
+        this.dy = 0;
+        if(coinsMap[Math.round(this.y)][this.x]==9){
+          getOffTheNine();
+        }
+      }
+      if(this.x > 26){
+        this.x = 26;
+        this.dx = -0.25;
+        this.dy = 0;
+        if(coinsMap[Math.round(this.y)][this.x]==9){
+          getOffTheNine();
+        }
+      }
+      if(this.y<1){
+        this.y = 1;
+        this.dy = 0.25;
+        this.dx = 0;
+        if(coinsMap[this.y][Math.round(this.x)]==9){
+          getOffTheNine();
+        }
+      }
+      if(this.y > 29){
+        this.y = 29;
+        this.dy = -0.25;
+        this.dx = 0;
+        if(coinsMap[this.y][Math.round(this.x)]==9){
+          getOffTheNine();
+        }
+      }
+      if(this.dx != 0 && this.dy!=0){
+        if(this.x<13){
+          if(this.y<5){
+            this.dx = 0;
+            this.dy = 0.25;
+          }
+
+        }
+      }
+
+      //traveling right and bump into a barier
+      if(this.dx < 0 && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]==9){
+        this.dx = 0;
+        this.y = Math.round(this.y);
+        this.x = Math.ceil(this.x);
+        if(coinsMap[this.y][this.x]==9){
+          getOffTheNine(this.name);
+        }
+        //if up and able, go up
+        if(this.destination.y<this.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]!=9){
+          this.dy = -0.25;
+        }
+        //if down and able, go down
+        else if(this.destination.y>=this.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]!=9){
+          this.dy = 0.25;
+        }
+        //if up and not able, go down
+        else if(this.destination.y<=this.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]==9){
+          this.dy = 0.25;
+        }
+        //if down and not able, go up
+        else if(this.destination.y>=this.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==9){
+          this.dy = -0.25;
+        }
+      }
+      //traveling left and bump into a barrier
+      else if(this.dx > 0 && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]==9){
+        this.dx = 0;
+        this.y = Math.round(this.y);
+        this.x = Math.floor(this.x);
+        if(coinsMap[this.y][this.x]==9){
+          getOffTheNine(this.name);
+        }
+        if(this.destination.y<=this.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]!=9){
+          this.dy = -0.25;
+        }
+        else if(this.destination.y>=this.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]!=9){
+          this.dy = 0.25;
+        }
+        else if(this.destination.y<=this.y && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]==9){
+          this.dy = 0.25;
+        }
+        else if(this.destination.y>=this.y && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==9){
+          this.dy = -0.25;
+        }
+
+      }
+      //traveling up and bump into a barrier
+      else if(this.dy < 0 && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]==9){
+        this.dy = 0;
+        this.x = Math.round(this.x);
+        this.y = Math.ceil(this.y);
+        if(coinsMap[this.y][this.x]==9){
+          getOffTheNine(this.name);
+        }
+        //if left and able, go left
+        if(this.destination.x<this.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]!=9){
+          this.dx = -0.25;
+        }
+        //if right and able, go right
+        else if(this.destination.x>this.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]!=9){
+          this.dx = 0.25;
+        }
+        //if left and not able, go right
+        if(this.destination.x<this.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]==9){
+          this.dx = 0.25;
+        }
+        //if right and not able, go left
+        else if(this.destination.x>this.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]==9){
+          this.dx = -0.25;
+        }
+      }
+      //traveling down and bump into barrier
+      else if(this.dy > 0 && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==9){
+        this.dy = 0;
+        this.x = Math.round(this.x);
+        this.y = Math.floor(this.y);
+        if(coinsMap[this.y][this.x]==9){
+          getOffTheNine(this.name);
+        }
+        //if left and able, go left
+        if(this.destination.x<this.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]!=9){
+          this.dx = -0.25;
+        }
+        //if right and able, go right
+        else if(this.destination.x>this.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]!=9){
+          this.dx = 0.25;
+        }
+        //if left and not able, go right
+        if(this.destination.x<this.x && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]==9){
+          this.dx = 0.25;
+        }
+        //if right and not able, go left
+        else if(this.destination.x>this.x && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]==9){
+          this.dx = -0.25;
+        }
+      }
+      //traveling up and there's an opening to the right and destination is to the right, sometimes go right
+      else if(this.dy<0 && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]!=9 && this.destination.x > this.x){
+        if(Math.random()<0.5){
+          this.dy = 0;
+          this.dx = 0.25;
+        }
+      }
+      //traveling up and there's an opneing to the left and destination is to the left, sometimes go left
+      else if(this.dy<0 && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]!=9 && this.destination.x < this.x){
+        if(Math.random()<0.5){
+          this.dy = 0;
+          this.dx = -0.25;
+        }
+      }
+      //traveling down and there's an opening to the right and destination is to the right, sometime go right
+      else if(this.dy > 0 && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]!=9 && this.destination.x > this.x){
+        if(Math.random()<0.5){
+          this.dy = 0;
+          this.dx = 0.25;
+        }
+      }
+      //traveling down and there's an opening to the left and destination is to the left, sometimes go left
+      else if(this.dy > 0 && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]!=9 && this.destination.x < this.x){
+        if(Math.random()<0.5){
+          this.dy = 0;
+          this.dx = -0.25;
+        }
+      }
+      //traveling left and there's an opening to the top and destination is up
+      else if(this.dx < 0 && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]!= 9 && this.destination.y<this.y){
+        if(Math.random()<0.5){
+          this.dx = 0;
+          this.dy = -0.25;
+        }
+      }
+      //traveling left and there's an opening to the bottom and destination is down
+      else if(this.dx < 0 && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]!= 9 && this.destination.y>this.y){
+        if(this.alive == true && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==4){
+          this.dy = 0;
+          this.dx = -0.25;
+        }
+        else if(this.alive == false && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==4){
+          this.dx = 0;
+          this.dy = 0.25;
+        }
+        else {
+          if(Math.random()<0.5){
+            this.dx = 0;
+            this.dy = 0.25;
+          }
+        }
+      }
+      //traveling right and there's an opening below and destination is down
+      else if(this.dx > 0 && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]!= 9 && this.destination.y > this.y){
+        if(this.alive == true && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==4){
+          this.dy = 0;
+          this.dx = 0.25;
+        }
+        else if(this.alive == false && coinsMap[Math.floor(this.y)+1][Math.round(this.x)]==4){
+          this.dx = 0;
+          this.dy = 0.25;
+        }
+        else {
+          if (Math.random()<0.5){
+            this.dx = 0;
+            this.dy = 0.25;
+          }
+        }
+      }
+      //traveling right and there's an opening above and destination is up
+      else if(this.dx > 0 && coinsMap[Math.ceil(this.y)-1][Math.round(this.x)]!= 9 && this.destination.y < this.y){
+        if(Math.random()<0.5){
+          this.dx = 0;
+          this.dy = -0.25;
+        }
+      }
+      //traveling left and you hit the passage
+      else if(this.dx < 0 && coinsMap[Math.round(this.y)][Math.ceil(this.x)-1]==3){
+        this.x=26;
+        this.y=15;
+        this.dy = 0;
+        this.dx = -0.25;
+      }
+      //traveling right and you hit the passage
+      else if(this.dx > 0 && coinsMap[Math.round(this.y)][Math.floor(this.x)+1]==3){
+        this.x = 1;
+        this.dy = 0;
+        this.dx = 0.25;
+      }
+      this.x += this.dx;
+      this.y += this.dy;
+      if(Math.abs(this.x - pacman.x)<1 && Math.abs(this.y - pacman.y)<1){
+        if(this.flee == false && this.alive == true){
+          document.getElementById('whoseTurn').innerHTML = "pacman's dead";
+          if(pacman.alive == true){
+            var path = "./../../static/assets/pacmanImages/";
+            pacman.alive = false;
+            this.dx = 0;
+            this.dy = 0;
+            pacman.deathcount++;
+            updateLives();
+            setResetGhostStatus(false);
+            document.getElementById('pacman').setAttribute("xlink:href", path+"sadpacman.gif");
+          }
+        }
+        else if(this.flee == true && this.alive == true){
+          var path = "./../../static/assets/pacmanImages/"
+          document.getElementById('whoseTurn').innerHTML = "ghost is dead";
+          document.getElementById(this.name).setAttribute("xlink:href", path+"eyes.png");
+          pacman.score += 300;
+          scoreCheck();
+          this.alive = false;
+          this.destination = {x: 13, y:14};
+        }
+      }
+
+      displayGhosts(ghosts);
+    }
+  }
+
+  function nextRound(){
+    //first I want to wait two seconds, then reset ghosts and pacman's positions
+    setTimeout(function(){
+      pacman.alive = true;
+      ghostSetUp(ghosts);
+      pacman.x = 13.5;
+      pacman.y = 23;
+      displayPacman();
+      }, 2000);
+  }
+  function setPacmanTarget(){
+    var pacx = pacman.x;
+    var pacy = pacman.y;
+    if(clyde.alive == true && clyde.flee == false){
+      clyde.destination.x = pacx;
+      clyde.destination.y = pacy;
+    }
+    if(blinky.alive == true && blinky.flee == false){
+      blinky.destination.x = pacx-2;
+      blinky.destination.y = pacy+2;
+    }
+    if(inky.alive == true && inky.flee == false){
+      inky.destination.x = pacx + 3;
+      inky.destination.y = pacy - 3;
+    }
+    if(pinky.alive == true && pinky.flee == false){
+      pinky.destination.x = pacx + 3;
+      pinky.destination.y = pacy -5;
+    }
+    for(var i=0; i<4; i++){
+      if(ghosts[i].destination.x > 26){
+        ghosts[i].destination.x = 26;
+      }
+      if(ghosts[i].destination.x < 1){
+        ghosts[i].destination.x = 1;
+      }
+      if(ghosts[i].destination.y > 29){
+        ghosts[i].destination.y = 29;
+      }
+      if(ghosts[i].destination.y < 1){
+        ghosts[i].destination.y = 1;
+      }
+    }
+
+  }
+
+  function updateLives() {
+    if(pacman.deathcount == 1){
+      document.getElementById('one').setAttribute("style", "display: none");
+    }
+    if(pacman.deathcount == 2){
+      document.getElementById('two').setAttribute("style", "display: none");
+    }
+    if(pacman.deathcount == 3){
+      document.getElementById('three').setAttribute("style", "display: none");
+    }
+    if(pacman.deathcount > 3){
+      var gameOver = confirm("Game over!!");
+      if(gameOver == true){
+        document.getElementById('one').setAttribute("style", "display: inline-block");
+        document.getElementById('two').setAttribute("style", "display: inline-block");
+        document.getElementById('three').setAttribute("style", "display: inline-block");
+        document.getElementById('score').innerHTML = "0";
+        document.getElementById('level').innerHTML = "1";
+        pacman.score = 0;
+        pacman.level = 1;
+        pacman.deathcount = 0;
+        pacman.powerPellets = [false, false, false, false];
+        displayAllCoins();
+      }
+      else {
+        document.getElementById('whoseTurn').innerHTML = "GAME OVER";
+        document.getElementById('score').innerHTML = "GAME OVER";
+      }
+      pacman.deathcount =0;
+    }
+  }
+
+  function nextLevel(){
+    setTimeout(function(){
+      document.getElementById('winner').setAttribute('style', 'display: none');
+      pacman.alive = true;
+      ghostSetUp(ghosts);
+      pacman.x = 13.5;
+      pacman.y = 23;
+      pacman.powerPellets = [false, false, false, false];
+      displayPacman();
+      displayAllCoins();
+      }, 2000);
+  }
+
+
+
+  var blinky = new Ghost("blinky", 13.5, 11.5);
+  var clyde = new Ghost("clyde", 11.5, 14);
+  var pinky = new Ghost("pinky", 13.5, 14);
+  var inky = new Ghost("inky", 15.5, 14);
+
+  var ghosts= [blinky, clyde, pinky, inky];
+  function ghostSetUp(array){
+    for(var i=0; i<array.length; i++){
+      array[i].dx = null;
+      array[i].dy = null;
+      array[i].freedom = false;
+      array[i].alive = true;
+    }
+    var path = "./../../static/assets/pacmanImages/";
+    document.getElementById('blinky').setAttribute("xlink:href", path+"blinky.gif");
+    document.getElementById('inky').setAttribute("xlink:href", path+"inky.gif");
+    document.getElementById('pinky').setAttribute("xlink:href", path+"pinky.gif");
+    document.getElementById('clyde').setAttribute("xlink:href", path+"clyde.gif");
+
+    blinky.startpoint = {x: 18, y: 9};
+    blinky.boxHelp = false;
+    blinky.x = 13.5;
+    blinky.y = 11.5;
+    clyde.startpoint = {x: 18, y: 17};
+    clyde.boxHelp = true;
+    clyde.boxTop = false;
+    clyde.x = 11.5;
+    clyde.y = 14;
+    pinky.startpoint = {x: 9, y:9};
+    pinky.boxHelp = false;
+    pinky.x = 13.5;
+    pinky.y = 14;
+    inky.startpoint = {x: 9, y:17};
+    inky.boxHelp = true;
+    inky.boxTop = false;
+    inky.x = 15.5;
+    inky.y = 14;
+    displayGhosts(ghosts);
+  }
+  ghostSetUp(ghosts);
+
+  function displayGhosts(array){
+    for(var i=0; i<array.length; i++){
+      g = document.getElementById(array[i].name);
+      if(g == null){
+        abort = true;
+        return
+      }
+      document.getElementById(array[i].name).style.y=array[i].y*25;
+      document.getElementById(array[i].name).style.x=array[i].x*25;
+    }
+  }
+
+
+  function findTrappedGhosts(array){
+    if(abort == true) {
+      setResetGhostStatus(true)
+      var id = window.setTimeout(function(){}, 0);
+      while (id--) {
+        window.clearTimeout(id);
+      }
+    }
+    for(var i=0; i<array.length; i++){
+      if(array[i].alive == false){
+        var panicGhost = array[i].hunt();
+        var recoveryGhost = array[i].recovery();
+      }
+      if(array[i].flee == true && array[i].alive == true){
+        var fleeingGhost = array[i].hunt();
+      }
+      if(array[i].freedom == false && array[i].flee == false && array[i].alive == true){
+
+        var ghostEscape = array[i].escape();
+      }
+      if(array[i].freedom == true && array[i].flee == false && array[i].alive == true){
+        var huntingGhost = array[i].hunt();
+      }
+    }
+  }
+  function setResetGhostStatus(end){
+    if(pacman.alive == true || end == true){
+      var ghostStatus = setInterval("findTrappedGhosts(ghosts)", 100);
+      if (abort == true) {
+        clearInterval(ghostStatus);
+      }
+    }
+    else {
+      for(var i=0; i<ghosts.length; i++){
+        ghosts[i].dx = 0;
+        ghosts[i].dy = 0;
+      }
+      nextRound();
+    }
+  }
+  setResetGhostStatus(false);
+
+
+  function displayPacman(direction){
+    var path = "./../../static/assets/pacmanImages/";
+    if(direction===undefined){
+      document.getElementById('pacman').setAttribute("xlink:href", path+"pacmanRight.gif");
+    }
+    if(direction=="down"){
+      document.getElementById('pacman').setAttribute("xlink:href", path+"pacmanDown.gif");
+    }
+    if(direction =="up"){
+      document.getElementById('pacman').setAttribute("xlink:href", path+"pacmanUp.gif");
+    }
+    if(direction =='left'){
+      document.getElementById('pacman').setAttribute("xlink:href", path+"pacmanLeft.gif");
+    }
+    if(direction =='right'){
+      document.getElementById('pacman').setAttribute("xlink:href", path+"pacmanRight.gif");
+    }
+    // document.getElementById('pacman').setAttribute("xlink:href", "pacmanRight.gif");
+    document.getElementById('pacman').style.y = pacman.y*25;
+    document.getElementById('pacman').style.x = pacman.x*25;
+   }
+
+   function getOffTheNine(ghost){
+     if(coinsMap[ghost.y][ghost.x-1]==0 || coinsMap[ghost.y][ghost.x-1]==1 || coinsMap[ghost.y][ghost.x-1]==2 ||    coinsMap[ghost.y][ghost.x-1]==4){
+       ghost.x = ghost.x-1;
+     }
+    else if(coinsMap[ghost.y][ghost.x+1]==0 || coinsMap[ghost.y][ghost.x+1]==1 || coinsMap[ghost.y][ghost.x+1]==2 ||    coinsMap[ghost.y][ghost.x+1]==4){
+      ghost.x = ghost.x+1;
+    }
+    else if(coinsMap[ghost.y-1][ghost.x]==0 || coinsMap[ghost.y-1][ghost.x]==1 || coinsMap[ghost.y-1][ghost.x]==2 ||    coinsMap[ghost.y-1][ghost.x]==4){
+      ghost.y = ghost.y-1;
+    }
+    else if(coinsMap[ghost.y+1][ghost.x]==0 || coinsMap[ghost.y+1][ghost.x]==1 || coinsMap[ghost.y+1][ghost.x]==2 ||    coinsMap[ghost.y+1][ghost.x]==4){
+      ghost.y = ghost.y+1;
+    }
+    else {
+      ghost.x = 1;
+      ghost.y = 1;
+      this.dy = 0;
+      this.dx = 0.25;
+    }
+   }
+
+  displayPacman();
+
+
+  document.onkeydown = function(e){
+     //pacmanright
+     var direction;
+     if(e.keyCode == 39 && coinsMap[pacman.y][pacman.x+1]==3 && pacman.alive == true){
+       direction = 'right';
+       pacman.x = 1;
+     }
+     else if(e.keyCode == 39 && coinsMap[pacman.y][pacman.x+1]!=9 && pacman.alive == true){
+       direction = 'right';
+       pacman.x = Math.floor(pacman.x)+1;
+     }
+     //pacmanleft
+     else if(e.keyCode == 37 && coinsMap[pacman.y][pacman.x-1]==3 && pacman.alive == true){
+       direction = 'left';
+       pacman.x = 26;
+       pacman.y=15;
+     }
+     else if (e.keyCode == 37 && coinsMap[pacman.y][pacman.x-1]!=9 && pacman.alive == true){
+       direction = 'left';
+       pacman.x = Math.floor(pacman.x)-1;
+
+     }
+     //pacmanup
+     else if (e.keyCode == 38 && coinsMap[pacman.y-1][Math.floor(pacman.x)]!=9 && pacman.alive == true){
+       direction = 'up';
+       pacman.y--;
+     }
+     //pacmandown
+     else if (e.keyCode == 40 && coinsMap[pacman.y+1][Math.floor(pacman.x)]!=9 && coinsMap[pacman.y+1][pacman.x]!=4 && pacman.alive == true){
+       direction = "down";
+       pacman.y++;
+     }
+     if(pacman.alive == true){
+       displayPacman(direction);
+       detectCoinCollection();
+       detectPowerPellet();
+     }
+     if(pacman.alive == true){
+       setPacmanTarget();
+     }
+     if(pacman.alive == true && pacman.cherry == true){
+       detectCherryCollection();
+     }
+  }
+
+   function Borders(coorda, coordb, coordc, coordd){
+     this.info = {coorda:coorda, coordb:coordb, coordc: coordc, coordd:coordd, style: "stroke: white; fill: none; stroke-width: 6;"};
+     this.initialize = function(){
+       var border = makeSVG('polyline',
+        { points: this.info.coorda + " " + this.info.coordb + " " + this.info.coordc + " " + this.info.coordd,
+          style: this.info.style
+        });
+      document.getElementById('svg').appendChild(border);
+     }
+     var makeSVG = function(tag, attrs) {
+           var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+           for (var k in attrs)
+           {
+               el.setAttribute(k, attrs[k]);
+           }
+           return el;
+       } //closes makeSVG
+
+       this.initialize();
+   }
+   var outerBorderTop = new Borders("9, 350", "9,9", "685, 9", "685, 360");
+   var outerBorderBottom = new Borders("9, 400", "9, 760", "685, 760", "685, 400");
+   var ghostBoxLeft = new Borders("320, 320", "270, 320", "270, 400", "350, 400");
+   var ghostBoxRight = new Borders("350, 400", "430, 400", "430, 320", "380, 320");
+   // var ghostBox = new Borders(500, 500, 300, 300);
+
+   function Rectangle(x, y, width, height){
+     this.info = {x: x, y: y, width: width, height: height, rx: 10, ry: 10, style: "fill: blue; stroke: yellow; stroke-width: 2;"};
+     this.initialize = function(){
+       var rectangle = makeSVG('rect',
+         { x: this.info.x,
+           y: this.info.y,
+           rx: this.info.rx,
+           ry: this.info.ry,
+           width: this.info.width,
+           height: this.info.height,
+           style: this.info.style
+         });
+      document.getElementById('svg').appendChild(rectangle);
+    }
+    var makeSVG = function(tag, attrs) {
+          var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+          for (var k in attrs)
+          {
+              el.setAttribute(k, attrs[k]);
+          }
+          boundaries.push(el);
+          return el;
+      } //closes makeSVG
+
+      this.initialize();
+   }
+
+   function ObstacleL(coorda, coordb, coordc, coordd, coorde, coordf){
+     this.info = {coorda: coorda, coordb: coordb, coordc: coordc, coordd: coordd, coorde: coorde, coordf: coordf, style: "fill: blue; stroke: yellow; stroke-width: 2; stroke-linejoin: round;"};
+     this.initialize = function(){
+       var obstacleL = makeSVG('polygon',
+         { points: this.info.coorda + " " + this.info.coordb + " " + this.info.coordc + " " + this.info.coordd + " " + this.info.coorde + " " + this.info.coordf,
+           style: this.info.style
+         });
+      document.getElementById('svg').appendChild(obstacleL);
+    }
+    var makeSVG = function(tag, attrs) {
+          var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+          for (var k in attrs)
+          {
+              el.setAttribute(k, attrs[k]);
+          }
+          boundaries.push(el);
+          return el;
+      } //closes makeSVG
+
+      this.initialize();
+   }
+   function ObstacleU(coorda, coordb, coordc, coordd, coorde, coordf, coordg, coordh){
+     this.info = {coorda: coorda, coordb: coordb, coordc: coordc, coordd: coordd, coorde: coorde, coordf: coordf, coordg: coordg, coordh: coordh, style: "fill: blue; stroke: yellow; stroke-width: 2; stroke-linejoin: round;"};
+     this.initialize = function(){
+       var obstacleL = makeSVG('polygon',
+         { points: this.info.coorda + " " + this.info.coordb + " " + this.info.coordc + " " + this.info.coordd + " " + this.info.coorde + " " + this.info.coordf + " " + this.info.coordg + " " + this.info.coordh,
+           style: this.info.style
+         });
+      document.getElementById('svg').appendChild(obstacleL);
+    }
+    var makeSVG = function(tag, attrs) {
+          var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+          for (var k in attrs)
+          {
+              el.setAttribute(k, attrs[k]);
+          }
+          boundaries.push(el);
+          return el;
+      } //closes makeSVG
+
+      this.initialize();
+   }
+   var oneL = new ObstacleL("50, 50", "50, 195", "148, 195", "148, 150", "98, 150", "98, 50");
+   var twoL = new ObstacleL("600, 50", "600, 150", "550, 150", "550, 195", "645, 195", "645, 50");
+   var threeL = new ObstacleL("100, 475", "100, 570", "220, 570", "220, 525", "145, 525", "145, 475");
+   var fourL = new ObstacleL("175, 400", "175, 495", "295, 495", "295, 450", "220, 450", "220, 400");
+   var fiveL = new ObstacleL("475, 400", "475, 450", "400, 450", "400, 495", "520, 495", "520, 400");
+   var sixL = new ObstacleL("550, 475", "550, 525", "475, 525", "475, 570", "595, 570", "595, 475");
+   var sevenL = new ObstacleL("50, 600", "50, 720", "95, 720", "95, 645", "145, 645", "145, 600");
+   var eightL = new ObstacleL("550, 600", "550, 645", "600, 645", "600, 720", "645, 720", "645, 600");
+   //rectangle(x, y, width, height);
+   var oneR = new Rectangle(125, 50, 95, 70);
+   var twoR = new Rectangle(475, 50, 95, 70);
+   var threeR = new Rectangle(25, 225, 45, 120);
+   var fourR = new Rectangle(625, 225, 45, 145);
+   var fiveR = new Rectangle(325, 675, 45, 70);
+   var sixR = new Rectangle(250, 600, 195, 45);
+   var oneU = new ObstacleU("250, 50", "250, 195", "295, 195", "295, 95", "400, 95", "400, 195", "445, 195", "445, 50");
+   var twoU = new ObstacleU("175, 150", "175, 225", "100, 225", "100, 270", "175, 270", "175, 345", "220, 345", "220, 150");
+   var threeU = new ObstacleU("325, 125", "325, 225", "250, 225", "250, 270", "445, 270", "445, 225", "370, 225", "370, 125");
+   var fourU = new ObstacleU("475, 150", "475, 345", "520, 345", "520, 270", "595, 270", "595, 225", "520, 225", "520, 150");
+   var fiveU = new ObstacleU("100, 300", "100, 400", "25, 400", "25, 570", "70, 570", "70, 445", "145, 445", "145, 300");
+   var sixU = new ObstacleU("325, 450", "325, 525", "250, 525", "250, 570", "445, 570", "445, 525", "370, 525", "370, 450");
+   var sevenU = new ObstacleU("550, 300", "550, 445", "625, 445", "625, 570", "670, 570", "670, 400", "595, 400", "595, 300");
+   var eightU = new ObstacleU("175, 600", "175, 675", "125, 675", "125, 720", "295, 720", "295, 675", "220, 675", "220, 600");
+   var nineU = new ObstacleU("475, 600", "475, 675", "400, 675", "400, 720", "570, 720", "570, 675", "520, 675", "520, 600");
+
+
+   function MakeCoin(cx, cy, r){
+     this.info = {cx: cx, cy: cy, r: r, style: "fill: yellow; stroke: white; stroke-width: 1;"};
+     this.initialize = function(){
+       var circle = makeSVG('circle',
+        {cx: this.info.cx,
+         cy: this.info.cy,
+         r: this.info.r,
+         style: this.info.style
+        });
+      document.getElementById('svg').appendChild(circle);
+     }
+     var makeSVG = function(tag, attrs) {
+           var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+           for (var k in attrs)
+           {
+               el.setAttribute(k, attrs[k]);
+           }
+           coins.push(el);
+           return el;
+       } //closes makeSVG
+
+       this.initialize();
+   }
+   function displayAllCoins(){
+     for (var i=0; i<coinsMap.length; i++){
+       for(var j=0; j<coinsMap[i].length; j++){
+         var x = 25*j+10;
+         var y = 25*i+10;
+         if(coinsMap[i][j] == 1){
+           var r = 3;
+           var newcoin = new MakeCoin(x, y, r);
+         }
+         else if(coinsMap[i][j] == 2){
+           var r = 7;
+           var newcoin = new MakeCoin(x, y, r);
+         }
+       }
+     }
+   }
+   displayAllCoins();
+   function detectCoinCollection(){
+     for(var i=0; i<coins.length; i++){
+       if(Math.abs(coins[i].cx.animVal.value - player.style.x) <= 10 && Math.abs(coins[i].cy.animVal.value - player.style.y) <= 10){
+         document.getElementById('svg').removeChild(coins[i]);
+         pacman.score += 10;
+         scoreCheck();
+         removeAtIndex(coins, i);
+
+         if((pacman.score > 500 && pacman.score < 1500) || pacman.score == 1500 || pacman.score == 3000 || pacman.score == 4500){
+           displayCherry();
+           setTimeout(hideCherry, 15000);
+         }
+         if(coins.length == 0){
+           pacman.level++;
+           document.getElementById('level').innerHTML = pacman.level;
+           document.getElementById('winner').setAttribute('style', 'display: block');
+           nextLevel();
+         }
+       }
+     }
+   }
+   function powerGone(){
+    var path = "./../../static/assets/pacmanImages/";
+     document.getElementById('whoseTurn').innerHTML = "1UP";
+     if(blinky.alive == true){
+       document.getElementById('blinky').setAttribute("xlink:href", path+"blinky.gif");
+     }
+     if(pinky.alive == true){
+     document.getElementById('pinky').setAttribute("xlink:href", path+"pinky.gif");
+     }
+     if(inky.alive == true){
+     document.getElementById('inky').setAttribute("xlink:href", path+"inky.gif");
+     }
+     if(clyde.alive == true){
+       document.getElementById('clyde').setAttribute("xlink:href", path+"clyde.gif");
+     }
+     setPacmanTarget();
+     for(var i=0; i<ghosts.length; i++){
+       ghosts[i].flee = false;
+      //  ghosts[i].safespace = null;
+
+     }
+   }
+   function detectPowerPellet(){
+    var path = "./../../static/assets/pacmanImages/";
+     if(pacman.x==1 && pacman.y==3 && pacman.powerPellets[0]==false){
+       pacman.powerPellets[0]=true;
+       for(var i=0; i<ghosts.length; i++){
+         if(ghosts[i].alive == true){
+           document.getElementById(ghosts[i].name).setAttribute("xlink:href", path+"deadghost.gif");
+           ghosts[i].flee = true;
+           //reverse direction
+           if(ghosts[i].dy>0){
+             ghosts[i].dy = -0.25;
+           }
+           else if(ghosts[i].dy<0){
+             ghosts[i].dy = 0.25;
+           }
+           else if(ghosts[i].dx<0){
+             ghosts[i].dx=0.25;
+           }
+           else if(ghosts[i].dx>0){
+             ghosts[i].dx = -0.25;
+           }
+
+           ghosts[i].destination = {x: 26, y: 29};
+         }
+       }
+       setTimeout(powerGone, 8000);
+     }
+     if(pacman.x==26 && pacman.y==3 && pacman.powerPellets[1]==false){
+       pacman.powerPellets[1]=true;
+       for(var i=0; i<ghosts.length; i++){
+         if(ghosts[i].alive == true){
+           document.getElementById(ghosts[i].name).setAttribute("xlink:href", path+"deadghost.gif");
+           ghosts[i].flee = true;
+           if(ghosts[i].dy>0){
+             ghosts[i].dy = -0.25;
+           }
+           else if(ghosts[i].dy<0){
+             ghosts[i].dy = 0.25;
+           }
+           else if(ghosts[i].dx<0){
+             ghosts[i].dx=0.25;
+           }
+           else if(ghosts[i].dx>0){
+             ghosts[i].dx = -0.25;
+           }
+           ghosts[i].destination = {x: 1, y: 29};
+         }
+       }
+       setTimeout(powerGone, 8000);
+     }
+     if(pacman.x==1 && pacman.y==27 && pacman.powerPellets[2]==false){
+       pacman.powerPellets[2]=true;
+       for(var i=0; i<ghosts.length; i++){
+         if(ghosts[i].alive == true){
+           document.getElementById(ghosts[i].name).setAttribute("xlink:href", path+"deadghost.gif");
+           ghosts[i].flee = true;
+           if(ghosts[i].dy>0){
+             ghosts[i].dy = -0.25;
+           }
+           else if(ghosts[i].dy<0){
+             ghosts[i].dy = 0.25;
+           }
+           else if(ghosts[i].dx<0){
+             ghosts[i].dx=0.25;
+           }
+           else if(ghosts[i].dx>0){
+             ghosts[i].dx = -0.25;
+           }
+           if(ghosts[i].name == "inky" || ghosts[i].name =="pinky"){
+             ghosts[i].destination = {x: 26, y: 1};
+           }
+           else {
+             ghosts[i].destination = {x:26, y: 27};
+           }
+         }
+       }
+       setTimeout(powerGone, 8000);
+     }
+     if(pacman.x==26 && pacman.y==27 && pacman.powerPellets[3]==false){
+       pacman.powerPellets[3]=true;
+       for(var i=0; i<ghosts.length; i++){
+         if(ghosts[i].alive == true){
+           document.getElementById(ghosts[i].name).setAttribute("xlink:href", path+"deadghost.gif");
+           ghosts[i].flee = true;
+           if(ghosts[i].dy>0){
+             ghosts[i].dy = -0.25;
+           }
+           else if(ghosts[i].dy<0){
+             ghosts[i].dy = 0.25;
+           }
+           else if(ghosts[i].dx<0){
+             ghosts[i].dx=0.25;
+           }
+           else if(ghosts[i].dx>0){
+             ghosts[i].dx = -0.25;
+           }
+           ghosts[i].destination = {x: 1, y: 1};
+         }
+       }
+       setTimeout(powerGone, 8000);
+     }
+
+   }
+
+   function detectCherryCollection(){
+     if((pacman.x==13 || pacman.x==14) && pacman.y==17){
+      document.getElementById('cherry').setAttribute('style', 'none');
+      pacman.cherry = false;
+      pacman.score += 500;
+      scoreCheck();
+     }
+   }
+
+   function removeAtIndex(array, index){
+     if(index == array.length-1){
+       array.pop();
+       return array;
+     }
+     else {
+      var temp = array[index];
+      for(var k=index; k<array.length-1; k++){
+        array[k] = array[k+1];
+      }
+      array[array.length-1] = temp;
+      array.pop();
+      return array;
+    }
+   }
+
+   </script>
+   </div>
+   </body>
+   </html>

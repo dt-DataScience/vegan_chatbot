@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VF Question</title>
+  {% include 'partials/styles.html' %}
+</head>
+<body>
+  {% include 'partials/nav.html' %}
+  <div id="quiz_or_feedback">
+    <div id="index-banner" class="parallax-container">
+      <div class="section no-pad-bot">
+        <div class="container">
+          <br><br>
+          <h2 class="header center white-text text-lighten-2 blurring border">{{context.question.question}}</h2>
+          <br><br>
+        </div>
+      </div>
+      <div class="parallax"><img src="{{ url_for('static', filename='assets/radish.jpg') }}" alt="Radishes from unsplash"></div>
+    </div>
+    <div id="pacman"></div>
+
+    <div class="container">
+      <div class="section">
+
+        <div class="row center">
+
+          <form class="col s12">
+            <div class = "row">
+              <div class = "input-field col s12">
+                <i class = "material-icons prefix">mode_edit</i>
+                <textarea name="answer" id="answer" class="materialize-textarea"></textarea>
+                <label for="answer">Write your response here. For best results, explain your reasoning thoroughly.</label>
+              </div>
+              <div id="troll_warning" class="hidden red-text text-lighten-1">
+                <p>Your answer isn't coming across as sincere. You are at risk of losing an avocado!</p>
+                <p>You have a chance to edit your answer before submitting.</p>
+              </div>
+            </div>
+            <button class="btn waves-effect waves-light" id="quiz_answer_button">Submit
+              <i class="material-icons right">send</i>
+            </button>
+            <button class="btn waves-effect waves-light hidden" id="second_chance_button">Submit
+              <i class="material-icons right">send</i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include 'partials/footer.html' %}
+
+  {% include 'partials/scripts.html' %}
+  <script src="{{ url_for('static', filename='js/troll.js') }}"></script>
+
+  </body>
+</html>

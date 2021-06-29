@@ -1,0 +1,157 @@
+{% include 'partials/styles.html' %}
+{% set max_score = context.max_match[1] %}
+
+<div id="index-banner" class="parallax-container">
+  <div class="section no-pad-bot">
+    <div class="container">
+      <br /><br />
+      <h1 class="header center purple-text text-lighten-2">Feedback</h1>
+      <div class="row center">
+        {% if max_score > 0.85 %}
+        <h4 class="header col s12 light">It looks like we are in alignment!</h4>
+        <h5>Our cosine similarity score is {{max_score}}.</h5>
+        {% elif max_score > 0.7 %}
+        <h4 class="header col s12 light">We seem to share some ideas.</h4>
+        <h5>Our cosine similarity score is {{max_score}}.</h5>
+        {% else %}
+        <h4>We probably have much to learn from each other.</h4>
+        <h5>Our cosine similarity is only {{max_score}}.</h5>
+        {% endif %}
+      </div>
+      <br /><br />
+    </div>
+  </div>
+  <div class="parallax">
+    <img
+      src="{{ url_for('static', filename='assets/purple.jpg') }}"
+      alt="Purple vegan food photo by Bruna Branco unsplash.com"
+    />
+  </div>
+</div>
+
+<div class="container">
+  <div class="section">
+    <!--   Icon Section   -->
+    <div class="row">
+      <div class="col s12 m4">
+        <div class="icon-block">
+          <h2 class="center brown-text">
+            <i class="material-icons">flash_on</i>
+          </h2>
+          <h5 class="center">Your answer</h5>
+
+          <p class="light">{{context.human_answer}}</p>
+        </div>
+      </div>
+
+      <div class="col s12 m4">
+        <div class="icon-block">
+          <h2 class="center brown-text"><i class="material-icons">group</i></h2>
+          <h5 class="center">Our answer</h5>
+
+          <p class="light">{{context.canned_answer}}</p>
+        </div>
+      </div>
+
+      <div class="col s12 m4">
+        <div class="icon-block">
+          <h2 class="center brown-text">
+            <i class="material-icons">settings</i>
+          </h2>
+          <h5 class="center">Our closest match</h5>
+          {% if context.max_match[0] != None %}
+          <p class="light">{{context.max_match[0].context}}</p>
+          <a href="{{context.max_match[0].meta.url}}">See more on this topic</a>
+          {% else %}
+          <p class="light">
+            You matched with our best answer! Keep scrolling for more
+            information on {{context.tag}}.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if context.match|length > 0 %}
+<div class="parallax-container valign-wrapper">
+  <div class="section no-pad-bot">
+    <div class="container">
+      <div class="row center">
+        <h5 class="header col s12 light">
+          Here are more ways we are aligned on {{context.tag}}
+        </h5>
+      </div>
+    </div>
+  </div>
+  <div class="parallax">
+    <img
+      src="{{ url_for('static', filename='assets/background2.jpg') }}"
+      alt="Unsplashed background img 2"
+    />
+  </div>
+</div>
+
+<div class="row center">
+  {% for match in context.match %}
+  <div class="col s12 m6">
+    <p>Cosine similarity score: {{match[1]}}</p>
+    <div class="card horizontal">
+      <div class="card-image">
+        <img src="https://lorempixel.com/100/190/nature/{{loop.index + 5}}" />
+      </div>
+      <div class="card-stacked">
+        <div class="card-content">
+          <p>{{match[0].context}}</p>
+        </div>
+        <div class="card-action">
+          <a href="{{match[0].meta.url}}">Visit our source</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% if context.miss|length > 0 %}
+<div class="parallax-container valign-wrapper">
+  <div class="section no-pad-bot">
+    <div class="container">
+      <div class="row center">
+        <h5 class="header col s12 light">
+          Use these resources to learn more about {{context.tag}}
+        </h5>
+      </div>
+    </div>
+  </div>
+  <div class="parallax">
+    <img
+      src="{{ url_for('static', filename='assets/background2.jpg') }}"
+      alt="Unsplashed background img 2"
+    />
+  </div>
+</div>
+
+<div class="row center">
+  {% for miss in context.miss %}
+  <div class="col s12 m6">
+    <p>Cosine similarity score: {{miss[1]}}</p>
+    <div class="card horizontal">
+      <div class="card-image">
+        <img src="https://lorempixel.com/100/190/nature/{{loop.index}}" />
+      </div>
+      <div class="card-stacked">
+        <div class="card-content">
+          <p>{{miss[0].context}}</p>
+        </div>
+        <div class="card-action">
+          <a href="{{miss[0].meta.url}}">Visit our source</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% include 'partials/scripts.html' %}
